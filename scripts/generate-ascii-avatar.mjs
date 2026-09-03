@@ -3,29 +3,30 @@ import sharp from 'sharp';
 
 const input = process.argv[2] ?? '/tmp/jontsai-avatar.png';
 const out = 'src/app/asciiPortrait.ts';
-const chars = '  .,:;irsXA253hMHGS#9B&@';
-const width = 132;
-const height = 88;
+const width = 68;
+const height = 50;
+const glyphs = [' ', '·', ':', '+', '*', '#', '@'];
 
 const { data, info } = await sharp(input)
   .resize(width, height, { fit: 'cover', position: 'centre' })
-  .grayscale()
-  .normalize()
-  .linear(1.5, -34)
+  .removeAlpha()
+  .modulate({ saturation: 1.12, brightness: 1.02 })
   .raw()
   .toBuffer({ resolveWithObject: true });
 
-const lines = [];
+const pixels = [];
 for (let y = 0; y < info.height; y++) {
-  let line = '';
+  const row = [];
   for (let x = 0; x < info.width; x++) {
-    const p = data[y * info.width + x];
-    const idx = Math.max(0, Math.min(chars.length - 1, Math.round((255 - p) / 255 * (chars.length - 1))));
-    line += chars[idx];
+    const i = (y * info.width + x) * info.channels;
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const idx = Math.max(0, Math.min(glyphs.length - 1, Math.round((255 - luma) / 255 * (glyphs.length - 1))));
+    row.push({ ch: glyphs[idx], color: `rgb(${r},${g},${b})` });
   }
-  lines.push(line.replace(/\s+$/, ''));
+  pixels.push(row);
 }
 
 mkdirSync('src/app', { recursive: true });
-writeFileSync(out, `export const asciiPortrait = ${JSON.stringify(lines.join('\n'))};\n`);
+writeFileSync(out, `export const asciiPortrait = ${JSON.stringify(pixels)} as const;\n`);
 console.log(`wrote ${out} (${info.width}x${info.height})`);
