@@ -3,16 +3,15 @@ import sharp from 'sharp';
 
 const input = process.argv[2] ?? '/tmp/jontsai-avatar.png';
 const out = 'src/app/asciiPortrait.ts';
-const chars = ' .,:;irsXA253hMHGS#9B&@';
-const width = 96;
-const height = 64;
+const chars = '  .,:;irsXA253hMHGS#9B&@';
+const width = 132;
+const height = 88;
 
 const { data, info } = await sharp(input)
   .resize(width, height, { fit: 'cover', position: 'centre' })
   .grayscale()
   .normalize()
-  .modulate({ brightness: 1.04 })
-  .linear(1.28, -18)
+  .linear(1.5, -34)
   .raw()
   .toBuffer({ resolveWithObject: true });
 
